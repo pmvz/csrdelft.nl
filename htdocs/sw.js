@@ -1,4 +1,4 @@
-const OFFLINE_VERSION = 1;
+const PUSH_REFRESH = 'pushRefresh';
 const CACHE_NAME = 'offline';
 const OFFLINE_URL = '/offline.html';
 
@@ -57,27 +57,65 @@ self.addEventListener('fetch', (event) => {
 });
 
 // Laat een notificatie zien als het een bericht krijgt van de WebPush API
-self.addEventListener('push', (e) => {
-	const data = e.data.json();
-	self.registration.showNotification(data.title, {
-		body: data.body,
-		icon: '/favicon.ico',
-		image: data.image,
-		tag: data.tag,
-		data: data.url,
-	});
+self.addEventListener('push', (event) => {
+	let messageData = event.data.json();
+
+	event.waitUntil(
+		self.registration.showNotification(messageData.title, {
+			tag: messageData.tag,
+			body: messageData.body,
+			icon: '/favicon.ico',
+			image: messageData.image,
+			data: messageData.url,
+			actions: [
+				{
+					action: messageData.url,
+					title: 'Open url',
+				},
+			],
+		})
+	);
 });
 
 // Om de link van het stek bericht in de browser te openen
 self.addEventListener(
 	'notificationclick',
-	function (event) {
-		console.log('On notification click: ', event.notification.tag);
-
+	async function (event) {
 		event.notification.close();
+
 		if (clients.openWindow) {
-			clients.openWindow(event.notification.data);
+			if (event.action) {
+				// Als er een actie is geklikt, open deze
+				clients.openWindow(event.action);
+			} else {
+				clients.openWindow(event.notification.data);
+			}
 		}
+	},
+	false
+);
+
+// Als de browser de subscription update, moet het ook in de server gezet worden
+self.addEventListener(
+	'pushsubscriptionchange',
+	(event) => {
+		event.waitUntil(
+			swRegistration.pushManager
+				.subscribe(event.oldSubscription.options)
+				.then((subscription) => {
+					const pushRefresh = localStorage.getItem(PUSH_REFRESH);
+					return fetch('/subscription', {
+						method: 'PATCH',
+						body: JSON.stringify({
+							id: pushRefresh,
+							...subscription.toJSON(),
+						}),
+						headers: {
+							'content-type': 'application/json',
+						},
+					});
+				})
+		);
 	},
 	false
 );
