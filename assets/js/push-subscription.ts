@@ -1,3 +1,4 @@
+import { select, selectAll } from "./lib/dom";
 const PUSH_REFRESH = 'pushRefresh';
 const PUBLIC_VAPID_KEY =
 	'BNodLgNO2YdnKllWbx8oxTOQqr9J0jh5IvQ1lfI5Wgsfdt8p-RXpZ5T6qRQFjNmYnJ7uPFQEI9v0eQ06nCYsRGg';
@@ -19,12 +20,6 @@ const urlBase64ToUint8Array = (base64String) => {
 	return outputArray;
 };
 
-const buttons = document.getElementById('buttons');
-const notAvailableElement = document.getElementById('not-available');
-
-const subscribeButton = document.getElementById('subscribe');
-const unsubscribeButton = document.getElementById('unsubscribe');
-
 const checkPushAvailability = async () => {
 	const registration = (await navigator.serviceWorker.ready.catch((err) => {
 		console.error('Registration: ', err);
@@ -39,9 +34,12 @@ const checkPushAvailability = async () => {
 
 const checkNotificationSubscription = async () => {
 	isPushAvailable = await checkPushAvailability();
+
 	if (!isPushAvailable) {
-		notAvailableElement.setAttribute('style', 'display: block');
-		buttons.setAttribute('style', 'display: none');
+		selectAll('.instellingen-melding-bericht')
+			.forEach((el) => el.classList.remove('d-block'));
+		selectAll('.instellingen-melding-knoppen')
+			.forEach((el) => el.classList.add('d-none'));
 		return;
 	}
 
@@ -94,7 +92,7 @@ const checkNotificationSubscription = async () => {
 
 checkNotificationSubscription();
 
-const subscribe = async () => {
+export const abonneerMeldingen = async () => {
 	if (!isPushAvailable) {
 		console.error('Push not available');
 		return;
@@ -129,9 +127,8 @@ const subscribe = async () => {
 		console.error('Subscribing...: ', err);
 	}
 };
-subscribeButton.onclick = subscribe;
 
-const unsubscribe = async () => {
+export const deabonneerMeldingen = async () => {
 	if (!isPushAvailable) {
 		console.error('Push not available');
 		return;
@@ -163,4 +160,3 @@ const unsubscribe = async () => {
 		console.error('Unsubscribing...: ', err);
 	}
 };
-unsubscribeButton.onclick = unsubscribe;

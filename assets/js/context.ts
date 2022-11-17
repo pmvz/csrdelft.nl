@@ -130,11 +130,18 @@ export const registerFlatpickrContext = async (): Promise<void> => {
 
 export const registerLidInstellingenContext = async (): Promise<void> => {
 	const { instellingOpslaan } = await import('./page/instellingen');
+	const { abonneerMeldingen, deabonneerMeldingen } = await import('./push-subscription');
 
 	ctx.addHandler('.instellingKnop', (el) =>
 		el.addEventListener('click', instellingOpslaan)
 	);
 	ctx.addHandler('.change-opslaan', (el) =>
 		el.addEventListener('change', instellingOpslaan)
+	);
+	ctx.addHandler('.abonneer-meldingen', (el) =>
+		el.addEventListener('click', abonneerMeldingen)
+	);
+	ctx.addHandler('.deabonneer-meldingen', (el) =>
+		el.addEventListener('click', deabonneerMeldingen)
 	);
 };
